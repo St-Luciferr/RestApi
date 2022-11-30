@@ -7,6 +7,9 @@ class ArticleSerializers(serializers.ModelSerializer):
     class Meta:
         model=Article
         fields=['id', 'title', 'author' ,'email', 'body']
+    
+    # def save(self, **kwargs):
+    #     article=Article.objects.create(self.validated_data)
 
 
 

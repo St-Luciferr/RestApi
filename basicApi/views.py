@@ -26,12 +26,13 @@ class ArticleListView(APIView):
         serializer=ArticleSerializers(data=request.data)
 
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(author=request.user)
             return Response(serializer.data,status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+    # this can be used if we're using generic views for creation and list
+    # def perform_create(self, serializer):
+    #     serializer.save(author=self.request.user)
 
 class ArticleDetailView(APIView):
     '''
@@ -44,7 +45,7 @@ class ArticleDetailView(APIView):
         find an article
         '''
         try:
-            article = Article.objects.get(pk=pk)
+            return Article.objects.get(pk=pk)
         except Article.DoesNotExist:
             raise Http404
 
