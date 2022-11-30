@@ -1,15 +1,21 @@
 from rest_framework import serializers
 from basicApi.models import Article
+from django.contrib.auth.models import User
 
 class ArticleSerializers(serializers.ModelSerializer):
+    author=serializers.ReadOnlyField(source='author.username')
     class Meta:
         model=Article
-        fields=['id', 'title', 'author' ,'email']
+        fields=['id', 'title', 'author' ,'email', 'body']
 
 
 
+class UserSerializer(serializers.ModelSerializer):
+    articles=serializers.PrimaryKeyRelatedField(many=True, queryset=Article.objects.all())
 
-    # create and return new article instance from validated data
+    class Meta:
+        model=User
+        fields=['id', 'username', 'articles']
 
 
 
