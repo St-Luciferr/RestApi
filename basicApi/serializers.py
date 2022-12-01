@@ -4,10 +4,10 @@ from django.contrib.auth.models import User
 
 class ArticleSerializers(serializers.HyperlinkedModelSerializer):
     author=serializers.ReadOnlyField(source='author.username')
-    body=serializers.HyperlinkedIdentityField(view_name='article-highlight', read_only=True)
+    highlight=serializers.HyperlinkedIdentityField(view_name='article-highlight', format = 'html')
     class Meta:
         model=Article
-        fields=['url', 'id', 'title', 'author' ,'email', 'body']
+        fields=['url', 'id', 'title', 'author' ,'email', 'body', 'highlight']
     
     # def save(self, **kwargs):
     #     article=Article.objects.create(self.validated_data)

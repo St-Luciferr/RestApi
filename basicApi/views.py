@@ -1,15 +1,15 @@
-from django.http import HttpResponse,Http404
+from django.http import Http404
 from django.contrib.auth.models import User
-from .models import Article
-from .serializers import *
-from .permissions import IsOwnerOrReadOnly
-from rest_framework import status, generics, permissions, renderers
+from rest_framework import status, generics, permissions, renderers, viewsets
 from rest_framework.views import APIView 
 from rest_framework.response import Response
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,action
 from rest_framework.reverse import reverse
 
+from .models import Article
+from .serializers import *
+from .permissions import IsOwnerOrReadOnly
 
 
 @api_view(['GET'])
@@ -18,6 +18,24 @@ def api_root(request, format=None):
         'users': reverse('user-list', request=request, format=format),
         'articles': reverse('article-list', request=request, format=format)
     })
+
+
+class ArticleViewSet(viewsets.ModelViewSet):
+    """
+    This viewset automatically provides `list`, `create`, `retrieve`,
+    `update` and `destroy` actions.
+    """
+    queryset=Article.objects.all()
+    serializer_class=ArticleSerializers
+    permission_classes=[permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly]
+
+    @action(detail=True,renderer_Classes=[renderers.StaticHTMLRenderer])
+    def highlight(self,request,*args,**kwargs):
+        article=self.get_object()
+        return Response(article.body)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
 class ArticleListView(APIView):
     '''
@@ -83,6 +101,7 @@ class ArticleDetailView(APIView):
         article.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class ArticleHighlight(generics.GenericAPIView):
     queryset=Article.objects.all()
     renderer_classes=[renderers.StaticHTMLRenderer]
@@ -90,6 +109,13 @@ class ArticleHighlight(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         article=self.get_object()
         return Response(article.body)
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    '''
+    This ViewSet automaticaly Provide `List` and `Retrieve` actions
+    '''
+    queryset=User.objects.all()
+    serializer_class=UserSerializer
 
 # Using generic view class
 class UserList(generics.ListAPIView):
