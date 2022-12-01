@@ -2,23 +2,24 @@ from rest_framework import serializers
 from basicApi.models import Article
 from django.contrib.auth.models import User
 
-class ArticleSerializers(serializers.ModelSerializer):
+class ArticleSerializers(serializers.HyperlinkedModelSerializer):
     author=serializers.ReadOnlyField(source='author.username')
+    body=serializers.HyperlinkedIdentityField(view_name='article-highlight', read_only=True)
     class Meta:
         model=Article
-        fields=['id', 'title', 'author' ,'email', 'body']
+        fields=['url', 'id', 'title', 'author' ,'email', 'body']
     
     # def save(self, **kwargs):
     #     article=Article.objects.create(self.validated_data)
 
 
 
-class UserSerializer(serializers.ModelSerializer):
-    articles=serializers.PrimaryKeyRelatedField(many=True, queryset=Article.objects.all())
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    articles=serializers.HyperlinkedRelatedField(many=True, view_name = 'article-detail', read_only=True)
 
     class Meta:
         model=User
-        fields=['id', 'username', 'articles']
+        fields=['url', 'id', 'username', 'articles']
 
 
 

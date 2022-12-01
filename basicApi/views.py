@@ -3,12 +3,21 @@ from django.contrib.auth.models import User
 from .models import Article
 from .serializers import *
 from .permissions import IsOwnerOrReadOnly
-from rest_framework import status, generics, permissions
+from rest_framework import status, generics, permissions, renderers
 from rest_framework.views import APIView 
 from rest_framework.response import Response
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
-# from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view
+from rest_framework.reverse import reverse
 
+
+
+@api_view(['GET'])
+def api_root(request, format=None):
+    return Response({
+        'users': reverse('user-list', request=request, format=format),
+        'articles': reverse('article-list', request=request, format=format)
+    })
 
 class ArticleListView(APIView):
     '''
@@ -19,7 +28,7 @@ class ArticleListView(APIView):
 
     def get(self, request, format=None):
         articles=Article.objects.all()
-        serializer=ArticleSerializers(articles,many=True)
+        serializer=ArticleSerializers(articles,many=True, context={'request':request})
         return Response(serializer.data)
     
     def post(self, request, format=None):
@@ -54,7 +63,7 @@ class ArticleDetailView(APIView):
         retrieve detail of an article
         '''
         article=self.get_object(pk)
-        serializer = ArticleSerializers(article)
+        serializer = ArticleSerializers(article,context={'request':request})
         return Response(serializer.data)
 
     def put(self,request,pk,format=None):
@@ -73,6 +82,14 @@ class ArticleDetailView(APIView):
         article=self.get_object(pk)
         article.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class ArticleHighlight(generics.GenericAPIView):
+    queryset=Article.objects.all()
+    renderer_classes=[renderers.StaticHTMLRenderer]
+
+    def get(self, request, *args, **kwargs):
+        article=self.get_object()
+        return Response(article.body)
 
 # Using generic view class
 class UserList(generics.ListAPIView):
